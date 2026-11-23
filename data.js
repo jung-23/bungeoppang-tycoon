@@ -11,19 +11,19 @@ const BP = {
   // 일차별 설정 — goal: 목표 매출, customers: 손님 수, patience: 손님 기본 인내심(초), slots: 동시에 서는 손님 수
   // 5일차는 무한 모드: 목표 없이 최고 기록 도전, 기회(lives) 5번
   DAYS: [
-    { goal: 9000,  customers: 8,  patience: 60,
+    { goal: 16000, customers: 8,  patience: 60,
       story: { icon: '👵', title: '할머니의 포장마차',
         intro: '허리를 다치신 할머니 대신 오늘부터 내가 포장마차를 맡게 됐다. "처음엔 팥붕만 구워도 충분하단다. 천천히 해, 천천히."',
         outro: '첫날 장사 끝! 할머니가 따뜻한 팥붕 한 입을 드시며 웃으셨다. "우리 손주, 손이 빠르네."' } },
-    { goal: 14000, customers: 9,  patience: 54,
+    { goal: 22000, customers: 9,  patience: 54,
       story: { icon: '🍮', title: '학생들의 소문',
         intro: '어젯밤 올라온 후기 덕분에 학교 앞 학생들이 몰려온다. "여기 슈크림도 돼요?" 새 재료를 준비해야 한다!',
         outro: '슈크림붕어빵이 동네 단톡방에 퍼졌다. 내일은 퇴근길 직장인 손님들이 올 것 같다.' } },
-    { goal: 20000, customers: 10, patience: 48,
+    { goal: 28000, customers: 10, patience: 48,
       story: { icon: '🧀', title: '야식 손님의 습격',
         intro: '퇴근길 직장인들이 야식으로 치즈붕어빵을 찾기 시작했다. 늘어나는 주문, 바빠지는 손놀림!',
         outro: '쭉 늘어나는 치즈에 모두가 감탄! 이제 단골이 하나둘 생겼다.' } },
-    { goal: 26000, customers: 11, patience: 44,
+    { goal: 33000, customers: 11, patience: 44,
       story: { icon: '🌿', title: '민초단 출동',
         intro: '"민초 붕어빵… 있나요?" 소문을 들은 민초단이 나타났다. 호불호가 갈리는 맛이지만, 좋아하는 사람은 정말 좋아한다.',
         outro: '민초단의 열렬한 지지! 반대파 손님도 한 입 먹고 말없이 지갑을 열었다.' } },
