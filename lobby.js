@@ -12,7 +12,8 @@
       <div class="big">🐟🔥</div>
       <h1>붕어빵 타이쿤</h1>
       <p>겨울밤 포장마차 사장님이 되어 보세요!</p>
-      <button class="btn" type="button" data-act="select">시작</button>`);
+      <button class="btn" type="button" data-act="select">시작</button>
+      <p class="credit">모티브 원작: 좋은 피자, 위대한 피자 (Good Pizza, Great Pizza) · TapBlaze</p>`);
   }
 
   function select() {

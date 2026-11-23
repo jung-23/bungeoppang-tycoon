@@ -5,7 +5,7 @@
   /* ---------- 데이터 ---------- */
   const INK = '#3a2418';
 
-  const { FILLINGS, DAYS, BEST_KEY } = BP;   // data.js (로비와 공용). 1~4일차에 속재료가 하나씩 해금
+  const { FILLINGS, DAYS, BEST_KEY, TUTORIAL } = BP;   // data.js (로비와 공용). 1~4일차에 속재료가 하나씩 해금
   const F = Object.fromEntries(FILLINGS.map(f => [f.id, f]));
 
   // 굽는 시간(초) 기준
@@ -34,6 +34,7 @@
   const newMold = () => ({ state: 'empty', filling: null, t: 0, a: 0, flipped: false, zone: null, tm: 0, lock: 0, pre: 0 });
   const lvlOf = m => levelOf(m.t);   // 굽기 정도는 '뒤집은 뒤' 경과 시간(t)로 판정
   const BAG_MAX = 8;
+  const TIP = 500;   // 빨리·정확하게 응대했을 때 팁
 
   const SKINS = ['#ffe0c2', '#f7cfa5', '#eebd91', '#fbd5b5'];
   const CUSTOMER_TYPES = [
@@ -128,6 +129,7 @@
     day: 1, phase: 'story', token: 0, last: 0,
     tool: null, molds: [], bag: [], slots: [], spawned: 0, done: 0,
     stats: { rev: 0, served: 0, lost: 0, happy: 0 },
+    timeLeft: 0,   // 시간제 일차의 남은 영업 시간(초)
   };
 
   const later = (fn, ms) => {
@@ -353,14 +355,16 @@
     $('hudDay').textContent = `Day ${S.day}`;
     $('hudMoney').textContent = won(S.stats.rev);
     const best = getBest();
-    if (cfg.record) {
+    if (cfg.endless) {
       $('hudGoalWrap').innerHTML = `/ 최고 기록 <span id="hudGoal">${best ? won(best) : '-'}</span>${best ? '원' : ''}`;
       $('goalFill').style.width = best ? Math.min(100, (S.stats.rev / best) * 100) + '%' : '0%';
     } else {
       $('hudGoalWrap').innerHTML = `/ 목표 <span id="hudGoal">${won(cfg.goal)}</span>원`;
       $('goalFill').style.width = Math.min(100, (S.stats.rev / cfg.goal) * 100) + '%';
     }
-    $('hudGuests').textContent = cfg.endless ? `${S.done}명 ❤️${S.lives}` : `${S.done}/${cfg.customers}`;
+    // 시간제(1~4일차)는 남은 시간, 무한 모드(5일차)는 서빙 수와 남은 기회
+    const t = Math.max(0, Math.ceil(S.timeLeft));
+    $('hudInfo').textContent = cfg.endless ? `👥 ${S.done}명 ❤️${S.lives}` : `⏱ ${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
   }
 
   // 해금 안 된 재료는 빈칸, 오늘 새로 열린 재료는 NEW 표시
@@ -383,7 +387,7 @@
     const c = S.slots[i] && S.slots[i].c;
     const box = slotEls[i].ticket;
     if (!c) {
-      box.innerHTML = S.spawned >= curDay().customers ? '' : '<div class="ticket-empty">손님을 기다리는 중…</div>';
+      box.innerHTML = '<div class="ticket-empty">손님을 기다리는 중…</div>';
       return;
     }
     const li = groupItems(c.order.items).map(([id, n]) =>
@@ -514,12 +518,14 @@
   const LOBBY = 'index.html';   // 로비(메인) 페이지
 
   function endDay() {
+    S.token++;   // 진행 중이던 손님 등장·퇴장 타이머 취소
+    if (drag) endDrag({ pointerId: drag.pid }, true);   // 끌고 있던 붕어빵·봉투가 있으면 놓음
     S.phase = 'result';
     const cfg = curDay();
     const st = S.stats;
     const story = cfg.story;
     let head, body, btn;
-    if (cfg.record) {
+    if (cfg.endless) {
       const prev = getBest();
       const isNew = st.rev > prev;
       if (isNew) setBest(st.rev);
@@ -537,7 +543,7 @@
       btn = ok ? `<button class="btn" type="button" data-act="next">다음 날로 →</button>`
                : `<button class="btn" type="button" data-act="retry">다시 도전!</button>`;
     }
-    const showOutro = cfg.record || st.rev >= cfg.goal;
+    const showOutro = cfg.endless || st.rev >= cfg.goal;
     showOverlay(`
       ${head}
       ${showOutro ? `<p class="story">${story.outro}</p>` : ''}
@@ -563,10 +569,59 @@
   }
 
   /* ---------- 게임 흐름 ---------- */
+  /* ---------- 튜토리얼 (1일차 시작 전) : 그림 + 설명, 이전/다음/건너뛰기 ---------- */
+  // 단계별 그림 : 게임에서 쓰는 SVG(틀·손님)와 같은 그림을 그대로 가져와 보여줌
+  function tutorialImage(kind) {
+    const mold = (state, extra = {}) => `<div class="tu-moldbox">${moldSVG({ state, filling: null, t: 0, ...extra }, 'tu-' + kind + state)}</div>`;
+    const tool = (icon, name) => `<span class="tool on tu-tool"><span class="t-ico">${icon}</span><span>${name}</span></span>`;
+    const arrow = '<span class="tu-arrow">➜</span>';
+    const cust = (mood, idx = 1) => `<span class="tu-cust">${customerSVG({ ...CUSTOMER_TYPES[idx], skin: SKINS[0] }, mood)}</span>`;
+    const bag = n => `<span class="tu-bag">${n ? `<span class="bag-badge">${n}</span>` : ''}</span>`;
+    switch (kind) {
+      case 'order':
+        return cust('happy') + `<aside class="ticket tu-ticket"><h3>📝 주문서</h3><ul><li><span class="dot" style="--c:${F.red.color}"></span>팥 ×2</li></ul>
+          <div class="tags"><span class="tag">⏱ 급해요!</span></div></aside>`;
+      case 'pour':  return tool('🥣', '반죽') + arrow + mold('pouring');
+      case 'fill':  return tool(F.red.icon, F.red.name) + arrow + mold('filling', { filling: 'red' });
+      case 'close': return mold('filled', { filling: 'red' }) + arrow + mold('closing', { filling: 'red' });
+      case 'flip':
+        return mold('baking') + `<div class="tu-side"><div class="tu-timing"><i class="zone"></i><i class="cursor"></i></div><small>흰 막대가 초록 구역일 때 탭!</small></div>`;
+      case 'bake':
+        return mold('open', { filling: 'red', t: 5 }) + `<div class="tu-side"><div class="tu-gauge"><i style="left:48%"></i></div>
+          <div class="tu-lvls"><span style="flex:28.6">덜 익음<br><small>못 열어요</small></span><span style="flex:39.3">알맞음</span><span style="flex:21.4">바삭</span><span style="flex:10.7">탐</span></div></div>`;
+      case 'bag':   return mold('open', { filling: 'red', t: 5 }) + '<span class="tu-arrow">👆➜</span>' + bag(1);
+      case 'serve': return bag(2) + '<span class="tu-arrow">👆➜</span>' + cust('happy');
+      case 'goal':
+        return `<div class="tu-side"><div class="tu-hud">⏱ 3:00 · 💰 목표 ${DAYS[0].goal.toLocaleString()}원</div>
+          <div class="tu-moods"><span>${cust('happy')}<small>빨리 → 100% + 팁</small></span><span>${cust('angry', 2)}<small>한참 기다림 → 30%</small></span></div></div>`;
+    }
+    return '';
+  }
+
+  let tuStep = 0;
+  function showTutorial(step = 0) {
+    S.phase = 'story';
+    tuStep = step;
+    const t = TUTORIAL[step], last = step === TUTORIAL.length - 1;
+    const dots = TUTORIAL.map((_, i) => `<i class="${i === step ? 'on' : ''}"></i>`).join('');
+    showOverlay(`
+      <div class="tu-head"><span>튜토리얼 ${step + 1}/${TUTORIAL.length}</span>
+        <button type="button" class="tu-skip" data-act="tu-skip">건너뛰기 ⏭</button></div>
+      <h2>${t.title}</h2>
+      <div class="tu-img">${tutorialImage(t.img)}</div>
+      <p class="story">${t.text}</p>
+      <div class="tu-dots">${dots}</div>
+      <div class="tu-nav">
+        <button class="btn ghostbtn" type="button" data-act="tu-prev" ${step === 0 ? 'disabled' : ''}>← 이전</button>
+        <button class="btn" type="button" data-act="tu-next">${last ? '영업 시작!' : '다음 →'}</button>
+      </div>`);
+  }
+
   function resetDay() {
     S.token++;
     S.molds = Array.from({ length: MOLD_COUNT }, newMold);
     S.bag = []; S.tool = null; S.done = 0; S.spawned = 0; S.lives = curDay().lives || 0;
+    S.timeLeft = curDay().time || 0;
     S.slots = Array.from({ length: slotN() }, () => ({ c: null, busy: false }));
     buildSlots(slotN());
     S.stats = { rev: 0, served: 0, lost: 0, happy: 0 };
@@ -588,7 +643,6 @@
   }
 
   function spawn(i) {
-    if (S.spawned >= curDay().customers) return;
     const sl = S.slots[i];
     if (!sl || sl.c) return;
     const c = makeCustomer();
@@ -620,7 +674,7 @@
       slotEls[i].cust.innerHTML = ''; slotEls[i].cust.className = 'customer';
       S.done++; updateHud();
       renderTicket(i); updatePatience();
-      if (dead || S.done >= curDay().customers) endDay();
+      if (dead) endDay();
       else later(() => spawn(i), 500);
     }, 2300);
   }
@@ -641,8 +695,8 @@
       return;
     }
 
-    const mult = p > 0.4 ? 1 : p > 0.15 ? 0.75 : 0.5;
-    const tip = p > 0.4 && ev.accuracy >= 0.85 ? 500 : 0;
+    const mult = p <= 0 ? 0.3 : p > 0.4 ? 1 : p > 0.15 ? 0.75 : 0.5;   // 인내심이 바닥난 채 기다리게 하면 30%
+    const tip = p > 0.4 && ev.accuracy >= 0.85 ? TIP : 0;
     const gain = Math.round((ev.price * mult) / 100) * 100 + tip;
 
     let mood, line;
@@ -812,6 +866,7 @@
     const dt = Math.min((now - S.last) / 1000, 0.5);
     S.last = now;
     if (!playing()) { SFX.sizzle(false); return; }
+    const cfg = curDay();
 
     S.molds.forEach((m, i) => {
       if (m.state === 'baking' && !m.flipped) {
@@ -835,12 +890,21 @@
 
     SFX.sizzle(S.molds.some(m => m.state === 'baking' || m.state === 'open'));
 
+    // 시간제(1~4일차) : 남은 영업 시간 감소, 0이 되면 바로 영업 종료
+    if (cfg.time) {
+      const before = S.timeLeft;
+      S.timeLeft = Math.max(0, S.timeLeft - dt);
+      if (before > 10 && S.timeLeft <= 10) toast('⏰ 영업 종료 10초 전!');
+      updateHud();
+      if (S.timeLeft <= 0) { endDay(); return; }
+    }
+
     S.slots.forEach((sl, i) => {
       const c = sl.c;
       if (!c || sl.busy) return;
-      c.patience -= dt;
+      c.patience = Math.max(0, c.patience - dt);
       const p = c.patience / c.patienceMax;
-      if (p <= 0) {
+      if (p <= 0 && cfg.endless) {   // 무한 모드: 인내심이 바닥나면 화나서 떠남 (시간제에선 화난 채 계속 기다림)
         S.stats.lost++;
         settle(i, { mood: 'angry', line: '너무 늦네요! 그냥 갈래요!', gain: 0 });
       } else {
@@ -889,7 +953,10 @@
     switch (b.dataset.act) {
       case 'select': location.href = LOBBY; break;
       case 'next': showStory(S.day + 1); break;
-      case 'go': startDay(+b.dataset.day); break;
+      case 'go': +b.dataset.day === 1 ? showTutorial() : startDay(+b.dataset.day); break;   // 1일차는 튜토리얼 먼저
+      case 'tu-prev': showTutorial(Math.max(0, tuStep - 1)); break;
+      case 'tu-next': tuStep + 1 >= TUTORIAL.length ? startDay(S.day) : showTutorial(tuStep + 1); break;
+      case 'tu-skip': startDay(S.day); break;
       case 'retry': startDay(S.day); break;
     }
   });

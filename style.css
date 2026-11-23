@@ -212,12 +212,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mold .fish-wrap { width: 100%; }
 .mold svg.fish { display: block; width: 100%; height: clamp(52px, 15vh, 150px); pointer-events: none; }
 .mold .label { max-width: 100%; font-size: clamp(9.5px, min(2.6vw, 1.8vh), 14px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.3em; }
-.mold .gauge {
+.mold .gauge, .tu-gauge {
   position: relative; width: 100%; height: clamp(7px, 1.4vh, 12px);
   border: 2.5px solid var(--ink); border-radius: 99px;
   background: linear-gradient(90deg, #f7e6b0 0 28.6%, #f0b341 28.6% 67.9%, #d9822b 67.9% 89.3%, #3b2418 89.3% 100%);
 }
-.mold .gauge i {
+.mold .gauge i, .tu-gauge i {
   position: absolute; top: -5px; width: 5px; height: calc(100% + 10px); margin-left: -2.5px;
   background: #fff; border: 2px solid var(--ink); border-radius: 3px;
 }
@@ -466,6 +466,53 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .stall.flank .tool { padding: clamp(2px, .8vh, 8px) 2px; }
 }
 
-/* ===== 스토리 문구 · 로비 카드(링크) ===== */
+/* ===== 스토리 문구 · 로비 카드(링크) · 원작 표시 ===== */
 .ov-box .story { margin: 4px 0 10px; line-height: 1.55; font-size: clamp(13px, min(3.6vw, 2.9vh), 17px); word-break: keep-all; }
 a.daycard { text-decoration: none; color: inherit; }
+.ov-box .credit { margin: 12px 0 0; font-size: 12px; line-height: 1.5; opacity: .6; }
+.hud-item[hidden] { display: none; }
+
+/* ===== 튜토리얼 팝업 ===== */
+.tu-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; opacity: .85; margin-bottom: 4px; }
+.tu-skip { font: inherit; font-size: 13px; padding: 3px 10px; background: #fff; border: 2.5px solid var(--ink); border-radius: 99px; }
+.tu-img {
+  display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 14px); flex-wrap: wrap;
+  min-height: clamp(120px, 24vh, 170px); margin: 6px 0; padding: 8px;
+  background: rgba(58, 36, 24, .08); border: 3px solid var(--ink); border-radius: 14px;
+}
+.tu-moldbox { padding: 6px 12px; background: linear-gradient(180deg, #5b5b66, #3b3b44); border: 3px solid var(--ink); border-radius: 12px; }
+.tu-moldbox svg.fish { display: block; height: clamp(80px, 16vh, 120px); width: auto; }
+.tu-cust svg { display: block; height: clamp(84px, 17vh, 120px); width: auto; }
+.tu-ticket { transform: rotate(1.5deg); text-align: left; flex: none; }
+.tu-tool { flex: none; width: clamp(54px, 15vw, 70px); padding: 4px 2px; font-size: 12px; transform: none; }
+.tu-arrow { font-size: clamp(20px, 5vw, 28px); }
+.tu-bag {
+  position: relative; flex: none; width: clamp(70px, 18vw, 96px); height: clamp(52px, 11vh, 70px);
+  background: linear-gradient(180deg, #fafafc, #c9cad2); border: 3px solid var(--ink); border-radius: 6px 6px 14px 14px; box-shadow: var(--stick);
+}
+.tu-side { display: flex; flex-direction: column; gap: 6px; align-items: stretch; width: min(200px, 100%); text-align: center; }
+.tu-side small { font-size: 12px; opacity: .8; }
+.tu-timing { position: relative; height: 16px; background: #1f1f26; border: 2.5px solid #15151a; border-radius: 99px; }
+.tu-timing .zone { position: absolute; top: 0; bottom: 0; left: 44%; width: 24%; background: #5cd66e; border-radius: 99px; box-shadow: 0 0 6px #5cd66e; }
+.tu-timing .cursor { position: absolute; top: -5px; bottom: -5px; left: 52%; width: 6px; margin-left: -3px; background: #fff; border: 2px solid var(--ink); border-radius: 3px; }
+.tu-gauge { height: 14px; }
+.tu-lvls { display: flex; font-size: 11px; line-height: 1.2; }
+.tu-lvls span { text-align: center; min-width: 0; }
+.tu-hud { white-space: nowrap; font-size: 13px; background: var(--paper); border: 3px solid var(--ink); border-radius: 10px; padding: 4px 8px; }
+.tu-moods { display: flex; gap: 10px; justify-content: center; }
+.tu-moods span { display: flex; flex-direction: column; align-items: center; }
+.tu-moods .tu-cust svg { height: clamp(64px, 12vh, 90px); }
+.tu-dots { display: flex; justify-content: center; gap: 5px; margin: 6px 0; }
+.tu-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(58, 36, 24, .25); }
+.tu-dots i.on { background: var(--orange); outline: 2px solid var(--ink); }
+.tu-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+.tu-nav .btn[disabled] { opacity: .4; }
+@media (orientation: landscape) and (max-height: 480px) {
+  .tu-img { min-height: 0; padding: 4px; margin: 3px 0; }
+  .tu-moldbox svg.fish { height: 64px; }
+  .tu-cust svg { height: 66px; }
+  .tu-moods .tu-cust svg { height: 52px; }
+  .tu-bag { height: 44px; }
+  .tu-dots { margin: 3px 0; }
+  .tu-head { margin-bottom: 0; }
+}
