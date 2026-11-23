@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>붕어빵 타이쿤 - 겨울밤 포장마차</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="snow" aria-hidden="true"></div>
+
+  <div id="app">
+    <!-- 상단 정보 -->
+    <header class="hud">
+      <button class="home" id="btnHome" type="button" aria-label="일차 선택으로">🏠</button>
+      <button class="home" id="btnSound" type="button" aria-label="소리 켜기/끄기">🔊</button>
+      <div class="hud-item" id="hudDay">Day 1</div>
+      <div class="hud-item hud-money">💰 <b id="hudMoney">0</b>원 <small id="hudGoalWrap">/ 목표 <span id="hudGoal">0</span>원</small></div>
+      <div class="hud-item">👥 <b id="hudGuests">0/0</b></div>
+      <div class="goalbar" aria-hidden="true"><i id="goalFill"></i></div>
+    </header>
+
+    <main class="stall">
+      <!-- 포장마차 / 손님 -->
+      <section class="scene" id="scene" aria-label="손님 영역">
+        <div class="awning" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="sign">🐟 겨울밤 붕어빵 🐟</div>
+
+        <div class="scene-body one" id="sceneBody"></div>
+        <div class="counter" aria-hidden="true"></div>
+      </section>
+
+      <!-- 작업대 -->
+      <section class="work" aria-label="작업대">
+        <div class="panel">
+          <div class="tools" id="tools"></div>
+        </div>
+
+        <div class="molds" id="molds"></div>
+
+        <div class="panel bagzone">
+          <div class="bag" id="bag">
+            <div class="bag-items" id="bagItems"></div>
+            <div class="bag-body"></div>
+            <span class="bag-badge" id="bagCount" hidden>0</span>
+          </div>
+          <div class="trash" id="trash" title="버리기">🗑</div>
+        </div>
+      </section>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
